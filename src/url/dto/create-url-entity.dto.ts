@@ -1,6 +1,6 @@
 import { IsUrl } from 'class-validator';
 
-export class CreateUrlDto {
+export class CreateUrlEntityDto {
   @IsUrl()
   readonly url: string;
 }

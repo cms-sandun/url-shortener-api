@@ -8,7 +8,7 @@ COPY /prisma ./prisma/
 
 RUN npm install
 
-#RUN npx prisma migrate dev --name initial-migration
+RUN npx prisma migrate dev --name initial-migration
 
 COPY . .
 
