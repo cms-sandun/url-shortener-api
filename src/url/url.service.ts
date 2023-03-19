@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
-import { getRandomString } from 'src/utils/random';
-import { UrlEntry, Prisma } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
+import { getRandomString } from '../utils/random';
+import { UrlEntry } from '@prisma/client';
 
 @Injectable()
 export class UrlService {
