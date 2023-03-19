@@ -12,7 +12,7 @@ import { Response } from 'express';
 import { CreateUrlEntityDto } from './dto/create-url-entity.dto';
 import { UrlService } from './url.service';
 
-@Controller('url')
+@Controller()
 export class UrlController {
   constructor(private readonly urlService: UrlService) {}
   @Post()
