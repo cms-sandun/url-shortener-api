@@ -4,20 +4,24 @@ import * as request from 'supertest';
 import { UrlModule } from '../src/url/url.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { UrlService } from '../src/url/url.service';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UrlEntry } from '@prisma/client';
 
 describe('UrlController (e2e)', () => {
   let app: INestApplication;
   let prismaClient: PrismaClient;
+  const mockUrlEntity: Omit<UrlEntry, 'id' | 'createdAt'> = {
+    originalUrl: 'https://www.google.com',
+    shortUrlKey: 'Xft6PHIe0R',
+  };
 
   beforeAll(async () => {
     prismaClient = new PrismaClient();
     await prismaClient.$connect();
 
-    prismaClient.urlEntry.create({
+    await prismaClient.urlEntry.create({
       data: {
-        originalUrl: 'https://www.google.com',
-        shortUrlKey: 'Xft6PHIe0R',
+        originalUrl: mockUrlEntity.originalUrl,
+        shortUrlKey: mockUrlEntity.shortUrlKey,
       },
     });
   });
@@ -31,16 +35,13 @@ describe('UrlController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
-
-    //TODO: create a test database and use it for testing
   });
 
   describe('create shorten url from original url', () => {
     it('should return url entity object with 201 response code for valid request body', () => {
-      const originalUrl = 'https://www.google.com';
       return request(app.getHttpServer())
         .post('/url')
-        .send({ url: originalUrl })
+        .send({ url: mockUrlEntity.originalUrl })
         .expect(201)
         .then((res) => {
           expect(res.body).toHaveProperty('id');
@@ -48,16 +49,15 @@ describe('UrlController (e2e)', () => {
           expect(res.body).toHaveProperty('originalUrl');
           expect(res.body).toHaveProperty('createdAt');
 
-          expect(res.body.originalUrl).toBe(originalUrl);
+          expect(res.body.originalUrl).toBe(mockUrlEntity.originalUrl);
           expect(res.body.shortUrlKey).toHaveLength(10);
         });
     });
 
     it('should return url 400 bad request for invalid request body', () => {
-      const originalUrl = 'invalid url';
       return request(app.getHttpServer())
         .post('/url')
-        .send({ url: originalUrl })
+        .send({ url: 'invalid url' })
         .expect(400)
         .then((res) => {
           expect(res.body.message[0]).toEqual('url must be a URL address');
@@ -67,18 +67,38 @@ describe('UrlController (e2e)', () => {
   });
 
   describe('get original url from shorten url', () => {
-    it.only('should return url entity object with 200 response code for valid urlShortenKey', () => {
-      const hortenlUrlKey = 'Xft6PHIe0R';
+    it('should return url entity object with 302 response code for valid urlShortenKey', () => {
       return request(app.getHttpServer())
-        .get(`/url/${hortenlUrlKey}`)
+        .get(`/url/${mockUrlEntity.shortUrlKey}`)
         .expect(302)
         .then((res) => {
-          console.log(res.header.location);
+          expect(res.header.location).toBe(mockUrlEntity.originalUrl);
+        });
+    });
+
+    it('should return 404 response code for invalid urlShortenKey', () => {
+      return request(app.getHttpServer())
+        .get(`/url/invalidKey`)
+        .expect(404)
+        .then((res) => {
+          expect(res.body.message).toEqual(
+            'Invalid url provided. Please try with valid url',
+          );
+          expect(res.body.error).toEqual('Not Found');
         });
     });
   });
 
   afterAll(async () => {
+    // Delete test entries
+    await prismaClient.urlEntry.deleteMany({
+      where: {
+        originalUrl: mockUrlEntity.originalUrl,
+      },
+    });
+
+    // Shutting down the prisma client and app
+    await prismaClient.$disconnect();
     await app.close();
   });
 });

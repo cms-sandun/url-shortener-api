@@ -2,12 +2,12 @@ import {
   Body,
   Controller,
   Get,
-  Post,
-  Param,
   HttpCode,
+  NotFoundException,
+  Param,
+  Post,
   Res,
 } from '@nestjs/common';
-import { UrlEntry } from '@prisma/client';
 import { Response } from 'express';
 import { CreateUrlEntityDto } from './dto/create-url-entity.dto';
 import { UrlService } from './url.service';
@@ -28,7 +28,14 @@ export class UrlController {
     @Res() res: Response,
   ) {
     const url = await this.urlService.findOne(shortUrlKey);
-    const originalUrl = url?.originalUrl;
+
+    if (!url) {
+      throw new NotFoundException(
+        'Invalid url provided. Please try with valid url',
+      );
+    }
+
+    const originalUrl = url.originalUrl;
     return res.redirect(originalUrl as string);
   }
 }

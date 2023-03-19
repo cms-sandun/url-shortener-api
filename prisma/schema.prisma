@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  schema   = "url_shortener_db"
 }
 
 datasource db {
