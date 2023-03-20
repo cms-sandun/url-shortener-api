@@ -40,7 +40,7 @@ describe('UrlController (e2e)', () => {
   describe('create shorten url from original url', () => {
     it('should return url entity object with 201 response code for valid request body', () => {
       return request(app.getHttpServer())
-        .post('/url')
+        .post('/')
         .send({ url: mockUrlEntity.originalUrl })
         .expect(201)
         .then((res) => {
@@ -56,7 +56,7 @@ describe('UrlController (e2e)', () => {
 
     it('should return url 400 bad request for invalid request body', () => {
       return request(app.getHttpServer())
-        .post('/url')
+        .post('/')
         .send({ url: 'invalid url' })
         .expect(400)
         .then((res) => {
@@ -69,7 +69,7 @@ describe('UrlController (e2e)', () => {
   describe('get original url from shorten url', () => {
     it('should return url entity object with 302 response code for valid urlShortenKey', () => {
       return request(app.getHttpServer())
-        .get(`/url/${mockUrlEntity.shortUrlKey}`)
+        .get(`/${mockUrlEntity.shortUrlKey}`)
         .expect(302)
         .then((res) => {
           expect(res.header.location).toBe(mockUrlEntity.originalUrl);
@@ -78,7 +78,7 @@ describe('UrlController (e2e)', () => {
 
     it('should return 404 response code for invalid urlShortenKey', () => {
       return request(app.getHttpServer())
-        .get(`/url/invalidKey`)
+        .get(`/invalidKey`)
         .expect(404)
         .then((res) => {
           expect(res.body.message).toEqual(
